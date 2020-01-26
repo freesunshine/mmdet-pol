@@ -5,7 +5,7 @@ model = dict(
     backbone=dict(
         type='PolNet',
         res_depth=50,
-        fusion_cfg=[8, 16, 8, 5]
+        fusion_cfg=[16, 32, 16, 8, 5]
         ),
     neck=dict(
         type='FPN',
@@ -156,15 +156,16 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
     step=[8, 11])
-checkpoint_config = dict(interval=1)
+checkpoint_config = dict(interval=10)
 # yapf:disable
 log_config = dict(
     interval=50,
     hooks=[
-        dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        # dict(type='TextLoggerHook'),
+        dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
+evaluation = dict(interval=1)
 # runtime settings
 total_epochs = 200
 dist_params = dict(backend='nccl')
