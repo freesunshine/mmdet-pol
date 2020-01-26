@@ -1,14 +1,23 @@
 import inspect
 
-import albumentations
 import mmcv
 import numpy as np
-from albumentations import Compose
-from imagecorruptions import corrupt
 from numpy import random
 
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 from ..registry import PIPELINES
+
+try:
+    from imagecorruptions import corrupt
+except ImportError:
+    corrupt = None
+
+try:
+    import albumentations
+    from albumentations import Compose
+except ImportError:
+    albumentations = None
+    Compose = None
 
 
 @PIPELINES.register_module
@@ -149,12 +158,23 @@ class Resize(object):
                 ]
             results[key] = masks
 
+    def _resize_seg(self, results):
+        for key in results.get('seg_fields', []):
+            if self.keep_ratio:
+                gt_seg = mmcv.imrescale(
+                    results[key], results['scale'], interpolation='nearest')
+            else:
+                gt_seg = mmcv.imresize(
+                    results[key], results['scale'], interpolation='nearest')
+            results['gt_semantic_seg'] = gt_seg
+
     def __call__(self, results):
         if 'scale' not in results:
             self._random_scale(results)
         self._resize_img(results)
         self._resize_bboxes(results)
         self._resize_masks(results)
+        self._resize_seg(results)
         return results
 
     def __repr__(self):
@@ -229,6 +249,11 @@ class RandomFlip(object):
                     mmcv.imflip(mask, direction=results['flip_direction'])
                     for mask in results[key]
                 ]
+
+            # flip segs
+            for key in results.get('seg_fields', []):
+                results[key] = mmcv.imflip(
+                    results[key], direction=results['flip_direction'])
         return results
 
     def __repr__(self):
@@ -275,11 +300,19 @@ class Pad(object):
                 mmcv.impad(mask, pad_shape, pad_val=self.pad_val)
                 for mask in results[key]
             ]
-            results[key] = np.stack(padded_masks, axis=0)
+            if padded_masks:
+                results[key] = np.stack(padded_masks, axis=0)
+            else:
+                results[key] = np.empty((0, ) + pad_shape, dtype=np.uint8)
+
+    def _pad_seg(self, results):
+        for key in results.get('seg_fields', []):
+            results[key] = mmcv.impad(results[key], results['pad_shape'][:2])
 
     def __call__(self, results):
         self._pad_img(results)
         self._pad_masks(results)
+        self._pad_seg(results)
         return results
 
     def __repr__(self):
@@ -340,7 +373,7 @@ class RandomCrop(object):
         crop_x1, crop_x2 = offset_w, offset_w + self.crop_size[1]
 
         # crop the image
-        img = img[crop_y1:crop_y2, crop_x1:crop_x2, :]
+        img = img[crop_y1:crop_y2, crop_x1:crop_x2, ...]
         img_shape = img.shape
         results['img'] = img
         results['img_shape'] = img_shape
@@ -353,6 +386,10 @@ class RandomCrop(object):
             bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1] - 1)
             bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0] - 1)
             results[key] = bboxes
+
+        # crop semantic seg
+        for key in results.get('seg_fields', []):
+            results[key] = results[key][crop_y1:crop_y2, crop_x1:crop_x2]
 
         # filter out the gt bboxes that are completely cropped
         if 'gt_bboxes' in results:
@@ -383,15 +420,8 @@ class RandomCrop(object):
 
 
 @PIPELINES.register_module
-class SegResizeFlipPadRescale(object):
-    """A sequential transforms to semantic segmentation maps.
-
-    The same pipeline as input images is applied to the semantic segmentation
-    map, and finally rescale it by some scale factor. The transforms include:
-    1. resize
-    2. flip
-    3. pad
-    4. rescale (so that the final size can be different from the image size)
+class SegRescale(object):
+    """Rescale semantic segmentation maps.
 
     Args:
         scale_factor (float): The scale factor of the final output.
@@ -401,24 +431,10 @@ class SegResizeFlipPadRescale(object):
         self.scale_factor = scale_factor
 
     def __call__(self, results):
-        if results['keep_ratio']:
-            gt_seg = mmcv.imrescale(
-                results['gt_semantic_seg'],
-                results['scale'],
-                interpolation='nearest')
-        else:
-            gt_seg = mmcv.imresize(
-                results['gt_semantic_seg'],
-                results['scale'],
-                interpolation='nearest')
-        if results['flip']:
-            gt_seg = mmcv.imflip(gt_seg)
-        if gt_seg.shape != results['pad_shape']:
-            gt_seg = mmcv.impad(gt_seg, results['pad_shape'][:2])
-        if self.scale_factor != 1:
-            gt_seg = mmcv.imrescale(
-                gt_seg, self.scale_factor, interpolation='nearest')
-        results['gt_semantic_seg'] = gt_seg
+        for key in results.get('seg_fields', []):
+            if self.scale_factor != 1:
+                results[key] = mmcv.imrescale(
+                    results[key], self.scale_factor, interpolation='nearest')
         return results
 
     def __repr__(self):
@@ -688,6 +704,8 @@ class Corrupt(object):
         self.severity = severity
 
     def __call__(self, results):
+        if corrupt is None:
+            raise RuntimeError('imagecorruptions is not installed')
         results['img'] = corrupt(
             results['img'].astype(np.uint8),
             corruption_name=self.corruption,
@@ -721,6 +739,8 @@ class Albu(object):
         skip_img_without_anno (bool): whether to skip the image
                                       if no ann left after aug
         """
+        if Compose is None:
+            raise RuntimeError('albumentations is not installed')
 
         self.transforms = transforms
         self.filter_lost_elements = False
@@ -764,6 +784,8 @@ class Albu(object):
 
         obj_type = args.pop("type")
         if mmcv.is_str(obj_type):
+            if albumentations is None:
+                raise RuntimeError('albumentations is not installed')
             obj_cls = getattr(albumentations, obj_type)
         elif inspect.isclass(obj_type):
             obj_cls = obj_type
@@ -826,9 +848,8 @@ class Albu(object):
                     results[label] = np.array(
                         [results[label][i] for i in results['idx_mapper']])
                 if 'masks' in results:
-                    results['masks'] = [
-                        results['masks'][i] for i in results['idx_mapper']
-                    ]
+                    results['masks'] = np.array(
+                        [results['masks'][i] for i in results['idx_mapper']])
 
                 if (not len(results['idx_mapper'])
                         and self.skip_img_without_anno):
