@@ -170,7 +170,7 @@ evaluation = dict(interval=1)
 total_epochs = 200
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/faster_polnet_r50_fpn_1x_8-16-6-5'
+work_dir = './work_dirs/faster_polnet_r50_fpn_1x_16-32-16-8-5'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
