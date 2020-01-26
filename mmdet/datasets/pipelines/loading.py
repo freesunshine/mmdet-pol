@@ -1,6 +1,7 @@
 import os.path as osp
 
 import mmcv
+import cv2
 import numpy as np
 import pycocotools.mask as maskUtils
 
@@ -33,6 +34,37 @@ class LoadImageFromFile(object):
         return '{} (to_float32={}, color_type={})'.format(
             self.__class__.__name__, self.to_float32, self.color_type)
 
+
+@PIPELINES.register_module
+class LoadPolSubImageFromFile(object):
+
+    def __init__(self, to_float32=True, div_num=65535.0):
+        self.to_float32 = to_float32
+        self.div_num = div_num
+
+    def __call__(self, results):
+        if results['img_prefix'] is not None:
+            filename = osp.join(results['img_prefix'],
+                                results['img_info']['filename'])
+        else:
+            filename = results['img_info']['filename']
+        img = cv2.imread(filename, -1)
+        if img is None:
+            print('load image error')
+            print(filename)
+        if self.to_float32:
+            img = img.astype(np.float32)
+            img = img / self.div_num
+        results['filename'] = filename
+        results['img'] = img
+        results['img_shape'] = img.shape
+        results['ori_shape'] = img.shape
+
+        return results
+
+    def __repr__(self):
+        return '{} (to_float32={}, div_num={})'.format(
+            self.__class__.__name__, self.to_float32, self.div_num)
 
 @PIPELINES.register_module
 class LoadAnnotations(object):
