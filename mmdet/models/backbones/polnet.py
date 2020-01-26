@@ -9,8 +9,8 @@ from torch.nn.modules.batchnorm import _BatchNorm
 @BACKBONES.register_module
 class PolNet(nn.Module):
     def __init__(self,
-                 in_channels=3,
-                 fusion_cfg=[8, 8, 3],
+                 in_channels=4,
+                 fusion_cfg=[8, 16, 8, 5],
                  res_depth=50):
         super(PolNet, self).__init__()
         self.fusion = None
@@ -26,8 +26,8 @@ class PolNet(nn.Module):
         print(self.fusion)
     def forward(self, x):
         if self.fusion is not None:
-            self.fusion_out = self.fusion(x)
-            x = self.cnn(self.fusion_out)
+            x = self.fusion(x)
+            x = self.cnn(x)
         else:
             x = self.cnn(x)
         return x
