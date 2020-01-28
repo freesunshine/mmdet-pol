@@ -49,6 +49,7 @@ class LoadPolSubImageFromFile(object):
         else:
             filename = results['img_info']['filename']
         img = cv2.imread(filename, -1)
+        
         if img is None:
             print('load image error')
             print(filename)
