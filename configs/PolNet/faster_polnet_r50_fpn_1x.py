@@ -1,4 +1,5 @@
 # model settings
+classes=('car')
 model = dict(
     type='FasterRCNN',
     pretrained=None,
@@ -35,7 +36,7 @@ model = dict(
         in_channels=256,
         fc_out_channels=1024,
         roi_feat_size=7,
-        num_classes=5,
+        num_classes=len(classes)+1,
         target_means=[0., 0., 0., 0.],
         target_stds=[0.1, 0.1, 0.2, 0.2],
         reg_class_agnostic=False,
@@ -130,21 +131,24 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'train/',
+        ann_file=data_root + 'car-xmls/train/',
         img_prefix=data_root + 'd04590135_images/',
         pipeline=train_pipeline,
+        classes=classes,
         pic_fmt='.tiff'),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'val/',
+        ann_file=data_root + 'car-xmls/val/',
         img_prefix=data_root + 'd04590135_images/',
         pipeline=test_pipeline,
+        classes=classes,
         pic_fmt='.tiff'),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'val/',
+        ann_file=data_root + 'car-xmls/val/',
         img_prefix=data_root + 'd04590135_images/',
         pipeline=test_pipeline,
+        classes=classes,
         pic_fmt='.tiff'))
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)

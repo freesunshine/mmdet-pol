@@ -11,11 +11,12 @@ from .registry import DATASETS
 class PolDataset(CustomDataset):
     CLASSES = ('bicycle', 'car', 'person', 'bus')
 
-    def __init__(self, min_size=None, pic_fmt='.tiff', **kwargs):
+    def __init__(self, min_size=None, pic_fmt='.tiff', classes=('bicycle', 'car', 'person', 'bus'),  **kwargs):
         self.pic_fmt = pic_fmt
         self.min_size = min_size
         super(PolDataset, self).__init__(**kwargs)
         self.cat2label = {cat: i + 1 for i, cat in enumerate(self.CLASSES)}
+        self.CLASSES = classes
 
     def load_annotations(self, ann_file):
         img_infos = []
@@ -46,28 +47,29 @@ class PolDataset(CustomDataset):
         labels_ignore = []
         for obj in root.findall('object'):
             name = obj.find('name').text
-            label = self.cat2label[name]
-            difficult = int(obj.find('difficult').text)
-            bnd_box = obj.find('bndbox')
-            bbox = [
-                int(bnd_box.find('xmin').text),
-                int(bnd_box.find('ymin').text),
-                int(bnd_box.find('xmax').text),
-                int(bnd_box.find('ymax').text)
-            ]
-            ignore = False
-            if self.min_size:
-                assert not self.test_mode
-                w = bbox[2] - bbox[0]
-                h = bbox[3] - bbox[1]
-                if w < self.min_size or h < self.min_size:
-                    ignore = True
-            if difficult or ignore:
-                bboxes_ignore.append(bbox)
-                labels_ignore.append(label)
-            else:
-                bboxes.append(bbox)
-                labels.append(label)
+            if name in self.CLASSES:
+                label = self.cat2label[name]
+                difficult = int(obj.find('difficult').text)
+                bnd_box = obj.find('bndbox')
+                bbox = [
+                    int(bnd_box.find('xmin').text),
+                    int(bnd_box.find('ymin').text),
+                    int(bnd_box.find('xmax').text),
+                    int(bnd_box.find('ymax').text)
+                ]
+                ignore = False
+                if self.min_size:
+                    assert not self.test_mode
+                    w = bbox[2] - bbox[0]
+                    h = bbox[3] - bbox[1]
+                    if w < self.min_size or h < self.min_size:
+                        ignore = True
+                if difficult or ignore:
+                    bboxes_ignore.append(bbox)
+                    labels_ignore.append(label)
+                else:
+                    bboxes.append(bbox)
+                    labels.append(label)
         if not bboxes:
             bboxes = np.zeros((0, 4))
             labels = np.zeros((0, ))
