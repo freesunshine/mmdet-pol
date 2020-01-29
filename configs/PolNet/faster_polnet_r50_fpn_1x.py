@@ -98,7 +98,7 @@ test_cfg = dict(
 )
 # dataset settings
 dataset_type = 'PolDataset'
-data_root = '/media/wangyong/工作/dataset/彩色偏振交通数据集/data/'
+data_root = '/home/wangyong/data/poldata/'
 img_norm_cfg = dict(
     mean=[0.0, 0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [
@@ -122,7 +122,7 @@ test_pipeline = [
             dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
-            dict(type='ToTensor', keys=['img']),
+            dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img']),
         ])
 ]
