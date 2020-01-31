@@ -70,10 +70,6 @@ class LoadPolSubImageFromFile(object):
 
 @PIPELINES.register_module
 class LoadPolNPZImageFromFile(object):
-
-    def __init__(self):
-
-
     def __call__(self, results):
         if results['img_prefix'] is not None:
             filename = osp.join(results['img_prefix'],
