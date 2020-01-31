@@ -6,13 +6,13 @@ from .custom import CustomDataset
 from .registry import DATASETS
 
 @DATASETS.register_module
-class PolDataset(CustomDataset):
+class BGRDataset(CustomDataset):
     CLASSES = ('car',)
 
     def __init__(self, min_size=None, pic_fmt='.tiff', classes=('bicycle', 'car', 'person', 'bus'),  **kwargs):
         self.pic_fmt = pic_fmt
         self.min_size = min_size
-        super(PolDataset, self).__init__(**kwargs)
+        super(BGRDataset, self).__init__(**kwargs)
         self.cat2label = {cat: i + 1 for i, cat in enumerate(self.CLASSES)}
         #self.CLASSES = classes
 
@@ -21,7 +21,7 @@ class PolDataset(CustomDataset):
         img_ids = [i.split('/')[-1].split('.')[0] for i in os.listdir(ann_file) if i.endswith('.xml')]
 
         for img_id in img_ids:
-            tif_name = img_id.split('_')[0] + '_' + img_id.split('_')[1]
+            tif_name = img_id
             filename = '{}{}'.format(tif_name, self.pic_fmt)
             xml_path = osp.join(self.ann_file, '{}.xml'.format(img_id))
             tree = ET.parse(xml_path)
