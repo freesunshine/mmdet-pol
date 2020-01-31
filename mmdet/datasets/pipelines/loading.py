@@ -67,6 +67,37 @@ class LoadPolSubImageFromFile(object):
         return '{} (to_float32={}, div_num={})'.format(
             self.__class__.__name__, self.to_float32, self.div_num)
 
+
+@PIPELINES.register_module
+class LoadPolNPZImageFromFile(object):
+
+    def __init__(self):
+
+
+    def __call__(self, results):
+        if results['img_prefix'] is not None:
+            filename = osp.join(results['img_prefix'],
+                                results['img_info']['filename'])
+        else:
+            filename = results['img_info']['filename']
+        img = np.load(filename)["arr_0"]
+
+        if img is None:
+            print('load image error')
+            print(filename)
+
+        results['filename'] = filename
+        results['img'] = img
+        results['img_shape'] = img.shape
+        results['ori_shape'] = img.shape
+
+        return results
+
+    def __repr__(self):
+        return '{} (to_float32={}, div_num={})'.format(
+            self.__class__.__name__, self.to_float32, self.div_num)
+
+
 @PIPELINES.register_module
 class LoadAnnotations(object):
 

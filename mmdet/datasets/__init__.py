@@ -10,6 +10,7 @@ from .wider_face import WIDERFaceDataset
 from .xml_style import XMLDataset
 from .pol_xml import PolDataset
 from .bgr_xml import BGRDataset
+from .npz_xml import NPZDataset
 
 __all__ = [
     'CustomDataset', 'XMLDataset', 'CocoDataset', 'VOCDataset',
