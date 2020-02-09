@@ -4,12 +4,10 @@ model = dict(
     type='FasterRCNN',
     pretrained=None,
     backbone=dict(
-        type='ResNet',
-        depth=50,
-        num_stages=4,
-        out_indices=(0, 1, 2, 3),
-        frozen_stages=1,
-        style='pytorch'),
+        type='PolNet',
+        res_depth=50,
+        fusion_cfg=[16, 32, 16, 8, 5]
+        ),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -99,12 +97,12 @@ test_cfg = dict(
     # e.g., nms=dict(type='soft_nms', iou_thr=0.5, min_score=0.05)
 )
 # dataset settings
-dataset_type = 'NPZDataset'
+dataset_type = 'PolDataset'
 data_root = '/home/wangyong/data/poldata/'
 img_norm_cfg = dict(
-    mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0], to_rgb=False)
+    mean=[0.0, 0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [
-    dict(type='LoadPolNPZImageFromFile'),
+    dict(type='LoadPolSubImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Resize', img_scale=(1248, 1024), keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -114,7 +112,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
 ]
 test_pipeline = [
-    dict(type='LoadPolNPZImageFromFile'),
+    dict(type='LoadPolSubImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1248, 1024),
@@ -134,24 +132,24 @@ data = dict(
     train=dict(
         type=dataset_type,
         ann_file=data_root + 'car-xmls2/train/',
-        img_prefix='/home/wangyong/DataDisk/PolData/' + 'ipa_images/',
+        img_prefix=data_root + 'd04590135_images/',
         pipeline=train_pipeline,
         classes=classes,
-        pic_fmt='.ipa.npz'),
+        pic_fmt='.tiff'),
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'car-xmls2/val/',
-        img_prefix='/home/wangyong/DataDisk/PolData/' + 'ipa_images/',
+        img_prefix=data_root + 'd04590135_images/',
         pipeline=test_pipeline,
         classes=classes,
-        pic_fmt='.ipa.npz'),
+        pic_fmt='.tiff'),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'car-xmls2/val/',
-        img_prefix='/home/wangyong/DataDisk/PolData/' + 'ipa_images/',
+        img_prefix=data_root + 'd04590135_images/',
         pipeline=test_pipeline,
         classes=classes,
-        pic_fmt='.ipa.npz'))
+        pic_fmt='.tiff'))
 # optimizer
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
@@ -176,7 +174,7 @@ evaluation = dict(interval=1)
 total_epochs = 100
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/car2_faster_rcnn_ipa_r50_fpn_1x'
+work_dir = './work_dirs/car2_faster_rcnn_polnet_r50_fpn_1x_16-32-16-8-5'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

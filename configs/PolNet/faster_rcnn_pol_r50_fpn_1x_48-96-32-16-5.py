@@ -131,21 +131,21 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'car-xmls/train/',
+        ann_file=data_root + 'car-xmls2/train/',
         img_prefix=data_root + 'd04590135_images/',
         pipeline=train_pipeline,
         classes=classes,
         pic_fmt='.tiff'),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'car-xmls/val/',
+        ann_file=data_root + 'car-xmls2/val/',
         img_prefix=data_root + 'd04590135_images/',
         pipeline=test_pipeline,
         classes=classes,
         pic_fmt='.tiff'),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'car-xmls/val/',
+        ann_file=data_root + 'car-xmls2/val/',
         img_prefix=data_root + 'd04590135_images/',
         pipeline=test_pipeline,
         classes=classes,
@@ -171,10 +171,10 @@ log_config = dict(
 # yapf:enable
 evaluation = dict(interval=1)
 # runtime settings
-total_epochs = 200
+total_epochs = 100
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/faster_rcnn_polnet_r50_fpn_1x_48-96-32-16-5'
+work_dir = './work_dirs/car2_faster_rcnn_polnet_r50_fpn_1x_48-96-32-16-5'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
