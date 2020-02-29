@@ -53,9 +53,10 @@ def get_iou_recall_curve(cfg_path, pth_path, out_path):
 
     model.eval()
     results = [None for _ in range(len(dataset))]
-
+    print(dataset)
     for idx in range(0, len(dataset), 1):
-        data = dataset[idx].cuda()
+        data = dataset[idx]['img'][0]
+        data = data.cuda()
 
         # compute output
         with torch.no_grad():
