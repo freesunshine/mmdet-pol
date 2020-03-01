@@ -133,17 +133,17 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'car-xmls/train/',
+        ann_file=data_root + 'car-xmls2/train/',
         img_prefix=data_root + 'bgr_images/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'car-xmls/val/',
+        ann_file=data_root + 'car-xmls2/val/',
         img_prefix=data_root + 'bgr_images/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'car-xmls/val/',
+        ann_file=data_root + 'car-xmls2/val/',
         img_prefix=data_root + 'bgr_images/',
         pipeline=test_pipeline))
 # optimizer
@@ -166,10 +166,10 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 200
+total_epochs = 100
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/faster_rcnn_bgr_r50_fpn_1x'
+work_dir = './work_dirs/car2_faster_rcnn_bgr_r50_fpn_1x'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

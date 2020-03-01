@@ -7,6 +7,7 @@ model = dict(
         type='ResNet',
         depth=50,
         num_stages=4,
+        in_channels=1,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         style='pytorch'),
@@ -102,7 +103,7 @@ test_cfg = dict(
 dataset_type = 'NPZDataset'
 data_root = '/home/wangyong/data/poldata/'
 img_norm_cfg = dict(
-    mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0], to_rgb=False)
+    mean=[0.0], std=[1.0], to_rgb=False)
 train_pipeline = [
     dict(type='LoadPolNPZImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
@@ -134,24 +135,24 @@ data = dict(
     train=dict(
         type=dataset_type,
         ann_file=data_root + 'car-xmls2/train/',
-        img_prefix='/home/wangyong/DataDisk/PolData/' + 'ipa_images/',
+        img_prefix=data_root + 'p_images/',
         pipeline=train_pipeline,
         classes=classes,
-        pic_fmt='.ipa.npz'),
+        pic_fmt='.p.npz'),
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'car-xmls2/val/',
-        img_prefix='/home/wangyong/DataDisk/PolData/' + 'ipa_images/',
+        img_prefix=data_root + 'p_images/',
         pipeline=test_pipeline,
         classes=classes,
-        pic_fmt='.ipa.npz'),
+        pic_fmt='.p.npz'),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'car-xmls2/val/',
-        img_prefix='/home/wangyong/DataDisk/PolData/' + 'ipa_images/',
+        img_prefix=data_root + 'p_images/',
         pipeline=test_pipeline,
         classes=classes,
-        pic_fmt='.ipa.npz'))
+        pic_fmt='.p.npz'))
 # optimizer
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
@@ -176,7 +177,7 @@ evaluation = dict(interval=1)
 total_epochs = 100
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/car2_faster_rcnn_ipa_r50_fpn_1x'
+work_dir = './work_dirs/car2_faster_rcnn_p_r50_fpn_1x'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
