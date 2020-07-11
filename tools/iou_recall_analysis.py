@@ -47,6 +47,7 @@ def get_iou_recall_curve(cfg_path, pth_path, out_path):
     for idx in range(0, len(dataset), 1):
         data = dataset[idx]['img'][0].numpy()
         data = data.transpose((1, 2, 0))
+
         # compute output
         result = inference_detector(model, data)
         results[idx] = result
@@ -61,9 +62,9 @@ def get_iou_recall_curve(cfg_path, pth_path, out_path):
                                         iou_thr=thr/20,
                                         dataset=None,
                                         logger=None,
-                                        nproc=4)
+                                        nproc=1)
 
-        out_list.append([thr/20, eval_results[0]['recall'][-1], mean_ap])
+        out_list.append([thr/20, eval_results[0]['ap'][-1], eval_results[1]['ap'][-1],mean_ap])
     print(out_list)
     f = open(out_path, 'w')
     for ln in out_list:
@@ -77,7 +78,7 @@ def get_iou_recall_curve(cfg_path, pth_path, out_path):
 
 
 if __name__ == '__main__':
-    cfg_path = '/home/wangyong/Code/mmdet-pol/configs/PolNet/faster_rcnn_pol_r50_fpn_1x_48-96-32-16-1.py'
-    pth_path = '/home/wangyong/DataDisk/work_dirs/car-xmls/car1_faster_rcnn_polnet_r50_fpn_1x_48-96-32-16-1/latest.pth'
-    out_path = '/home/wangyong/DataDisk/work_dirs/car-xmls/car1_faster_rcnn_polnet_r50_fpn_1x_48-96-32-16-1/iou_recall.csv'
+    cfg_path = '/home/wangyong/Code/mmdet-pol/configs/PolNet/faster_rcnn_pol_r50_fpn_1x_48-96-32-16-9.py'
+    pth_path = '/home/wangyong/Code/mmdet-pol/work_dirs/person_car2_faster_rcnn_polnet_r50_fpn_1x_48-96-32-16-9/epoch_100.pth'
+    out_path = '/home/wangyong/Code/mmdet-pol/work_dirs/iou-courves/48-96-32-16-9.csv'
     get_iou_recall_curve(cfg_path, pth_path, out_path)
